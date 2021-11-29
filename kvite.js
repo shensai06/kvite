@@ -6,7 +6,7 @@ const app = new Koa();
 const opn = require("opn"); //目标通常想打开的文件、url或者可执行的文件，一般会用系统中默认的应用打开，当然也可以指定应用以及相关的开启参数
 const fs = require("fs"); // 文件系统
 const path = require("path");
-const complierSFC = require("@vue/compiler-sfc"); //引入vue文件的解析
+const complierSFC = require("@vue/compiler-sfc"); //引入vue文件的解析 预编译为标准的 JavaScript 与 CSS
 const complierDOM = require("@vue/compiler-dom"); //引入template的解析
 
 // 中间件配置
