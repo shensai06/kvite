@@ -53,7 +53,7 @@ app.use(async (ctx) => {
     const ret = complierSFC.parse(fs.readFileSync(p, "utf8")); // console.log(ret)  可以看到是一颗ast树，可以在终端中查看
     // vue文件后缀会携带 参数 type=template   为空则为 js，template则是 html
     if (!query.type) {
-      //SFC请求，读取vue文件，解析为js
+      //SFC请求，读取vue文件，没有后缀怎 将 js 提取出来设置成 import 来引入，html 部分则设置成 type=template 等待下一次解析成 html
       //获取脚本部分的内容
       const scriptContent = ret.descriptor.script.content;
       //替换默认导出为一个常量，方便后续修改
@@ -61,11 +61,19 @@ app.use(async (ctx) => {
         "export default ",
         "const __script = "
       );
+      // css 处理
+      let code = '';
+      ret.descriptor.styles.forEach((item, index) => {
+        code += `\nimport '${url}?type=style&index=${index}'\n`
+      })
+      
+      
       ctx.type = "application/javascript";
       // 解析template
       ctx.body = `
         ${rewriteImport(script)}
         import {render as __render} from '${url}?type=template'
+         ${code}
         __script.render = __render
         export default __script
         `;
@@ -80,6 +88,15 @@ app.use(async (ctx) => {
       }).code;
       ctx.type = "application/javascript";
       ctx.body = rewriteImport(render);
+    }
+    if (query.type === "style") {
+      const styleBlock = ret.descriptor.styles[ctx.query.index];
+      ctx.type = "application/javascript";
+      ctx.body = `
+        \n const __css = ${JSON.stringify(styleBlock.content)}
+        \n updateCss(__css)
+        \n export default __css
+    `
     }
   }
 });
